@@ -5,29 +5,31 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// 背景を黒に設定
-ctx.fillStyle = "black";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
 // ウィンドウサイズ変更時もリサイズ
 window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (!gameInterval) {
+        initialize();
+    }
 });
 
-// 初期化
-let mouse = { x: 0, y: 0, dx: 0, dy: 0 };
-let elements = [];
-let stage = 1;
-let IsMouseDown = false;
-let temperature = 10000000; // 初期温度1000万度
-let coreChangingTime = 0;
-let count = 0;
-let bombingCount = -250;
+// グローバル変数
+let mouse;
+let elements;
+let stage;
+let IsMouseDown;
+let temperature;
+let coreChangingTime;
+let count;
+let bombingCount;
+let clearCount;
+let gameInterval;
+let screenTransition = 1;
 const maxTemps = [10000000, 100000000, 600000000, 1200000000, 1500000000, 2500000000, 3000000000];
 const risingWidths = [0, 15000000, 60000000, 60000000, 50000000, 90000000, 40000000];
+// const maxTemps = [10000000, 100000000, 600000000, 1200000000, 1500000000, 2500000000, 3000000000];
+// const risingWidths = [0, 90000000, 500000000, 600000000, 300000000, 1000000000, 500000000];
 const guides = [
     [[["H", "H", "H", "H"], ["He", "n"]]],
     [[["He", "He", "He"], ["C", "n"]], [["C", "He"], ["O", "n"]]],
@@ -46,17 +48,49 @@ const coreColor = [
     ["#ffffff", "#ffe680", "#ff0000", "#000000"]
 ];
 
-// メインループ
-const main = () => {
-    // 画面クリア
+// 変数初期化
+const initializeVariables = () => {
+    mouse = { x: 0, y: 0, dx: 0, dy: 0 };
+    elements = [];
+    stage = 1;
+    IsMouseDown = false;
+    temperature = 10000000; // 初期温度1000万度
+    coreChangingTime = 0;
+    count = 0;
+    bombingCount = -250;
+    clearCount = 0;
+    gameInterval = null;
+};
+
+// 画面初期化
+const initializeScreen = () => {
     ctx.save();
     ctx.globalAlpha = 0.5;
     ctx.beginPath();
     drawRect(0, 0, canvas.width, canvas.height, coreColor[stage - 1][3]);
     ctx.globalAlpha = 0.5;
     drawRect(0, 0, canvas.width, canvas.height, "#000000");
-    
     ctx.restore();
+};
+
+// 初期化
+const initialize = () => {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    initializeVariables();
+    initializeScreen();
+    drawCore(1);
+    drawText("画面をタップして開始", canvas.width / 2 - 100, canvas.height / 2, "20px Arial", "#000000");
+}
+
+// メインループ
+const main = () => {
+    // 画面クリア
+    if (bombingCount < 250) {
+        initializeScreen();
+    } else {
+        drawRect(0, 0, canvas.width, canvas.height, "#ffffff");
+    }
 
     // マウスドラッグ処理
     if (IsMouseDown) {
@@ -260,40 +294,35 @@ const main = () => {
             element.invincibleTime = 20; 
             element.isDeleting = true;
         });
+        clearCount = count;
     };
     if (stage == 7) {
-        console.log(bombingCount);
         if (bombingCount >= 250) {
-            clearInterval(gameInterval);
-            return;
+            drawRect(0, 0, canvas.width, canvas.height, "#ffffff");
+            if (bombingCount >= 300) {
+                drawText("ゲームクリア", canvas.width / 2 - 90, canvas.height / 2, "30px Arial", "#000000");
+                if (bombingCount >= 350) {
+                    drawText(`タイム: ${Math.floor(clearCount / 100)}.${clearCount % 100} 秒`, canvas.width / 2 - 80, canvas.height / 2 + 40, "20px Arial", "#000000");
+                    if (bombingCount >= 400) {
+                        drawText("タップしてリスタート", canvas.width / 2 - 100, canvas.height / 2 + 80, "20px Arial", "#000000");
+                        clearInterval(gameInterval);
+                        screenTransition = 0;
+                        return;
+                    }
+                }
+            }
         }
     };
 
     // コア描画
-    const coreSize = stage * 40 + 100 - coreChangingTime * 40 / 20 + 2 * stage * Math.sin(count / 100) + Math.max(0, bombingCount * 10); 
-    ctx.save();
-    ctx.globalAlpha = 0.7 - (coreChangingTime * 0.7 / 20);
-    let radgradient1 = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, coreSize);
-    radgradient1.addColorStop(0, coreColor[stage - 1][0]);
-    radgradient1.addColorStop(1, coreColor[stage - 1][1]);
-    radgradient1.addColorStop(1, coreColor[stage - 1][2]);
-    radgradient1.addColorStop(1, coreColor[stage - 1][3]);
-    drawArc(canvas.width / 2, canvas.height / 2, coreSize, radgradient1);
-    ctx.restore();
-    // 滑らかに変化するための時間経過
-    if (coreChangingTime > 0) {
-        ctx.save();
-        ctx.globalAlpha = coreChangingTime * 0.7 / 20;
-        let radgradient2 = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, coreSize);
-        radgradient2.addColorStop(0, coreColor[stage - 2][0]);
-        radgradient2.addColorStop(1, coreColor[stage - 2][1]);
-        radgradient2.addColorStop(1, coreColor[stage - 2][2]);
-        radgradient2.addColorStop(1, coreColor[stage - 2][3]);
-        drawArc(canvas.width / 2, canvas.height / 2, coreSize, radgradient2);
-        ctx.restore();
-        coreChangingTime--;
+    if (bombingCount < 250){    
+        drawCore(1);
+        // 滑らかに変化するための時間経過
+        if (coreChangingTime > 0) {
+            drawCore(2);
+            coreChangingTime--;
+        }
     }
-    
 
     // 元素描画
     elements.forEach((element) => {
@@ -334,9 +363,7 @@ const main = () => {
 
     // カウントを進める
     count++;
-    if (stage == 7) {
-        bombingCount++;
-    }
+    if (stage == 7) bombingCount++;
 }
 
 // 元素作成
@@ -537,47 +564,81 @@ const drawGuide = (drawingElements) => {
     });
 }
 
-// マウス・タッチイベント
-window.addEventListener("mousedown", (e) => {
+// コア描画
+const drawCore = (adjustment) => {
+    const coreSize = stage * 40 + 100 - coreChangingTime * 40 / 20 + 2 * stage * Math.sin(count / 100) + Math.max(0, bombingCount * 10); 
+    ctx.save();
+    ctx.globalAlpha = 0.7 - (coreChangingTime * 0.7 / 20);
+    let radgradient1 = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, coreSize);
+    radgradient1.addColorStop(0, coreColor[stage - adjustment][0]);
+    radgradient1.addColorStop(1, coreColor[stage - adjustment][1]);
+    radgradient1.addColorStop(1, coreColor[stage - adjustment][2]);
+    radgradient1.addColorStop(1, coreColor[stage - adjustment][3]);
+    drawArc(canvas.width / 2, canvas.height / 2, coreSize, radgradient1);
+    ctx.restore();
+}
+
+// マウスダウンまたはタッチスタート処理
+const mousedownTouchstart = (e) => {
+    if (!gameInterval && screenTransition >= 2) {
+        gameInterval = setInterval(main, 10);
+        return;
+    } 
+    if (screenTransition == 1){
+        screenTransition = 2;
+        initialize();
+        return;
+    } else if (screenTransition == 0){
+        screenTransition = 1;
+        return;
+    }
     IsMouseDown = true;
     mouse.x = e.clientX;
     mouse.y = e.clientY;
     mouse.dx = 0;
     mouse.dy = 0;
-});
+}
 
-window.addEventListener("touchstart", (e) => {
-    IsMouseDown = true;
-    mouse.x = e.touches[0].clientX;
-    mouse.y = e.touches[0].clientY;
-    mouse.dx = 0;
-    mouse.dy = 0;
-});
-
-window.addEventListener("mouseup", (e) => {
+// マウスアップまたはタッチエンド処理
+const mouseupTouchend = (e) => {
+    if (!gameInterval) return;
     IsMouseDown = false;
     mouse.dx = 0;
     mouse.dy = 0;
-});
+}
 
-window.addEventListener("touchend", (e) => {
-    IsMouseDown = false;
-    mouse.dx = 0;
-    mouse.dy = 0;
-});
-
-window.addEventListener("mousemove", (e) => {
+// マウスムーブまたはタッチムーブ処理
+const mousemoveTouchmove = (e) => {
+    if (!gameInterval) return;
     mouse.dx = e.clientX - mouse.x;
     mouse.dy = e.clientY - mouse.y;
     mouse.x = e.clientX;
     mouse.y = e.clientY;
+}
+
+window.addEventListener("mousedown", (e) => {
+    mousedownTouchstart(e);
+});
+
+window.addEventListener("touchstart", (e) => {
+    mousedownTouchstart(e.touches[0]);
+});
+
+window.addEventListener("mouseup", (e) => {
+    mouseupTouchend(e);
+});
+
+window.addEventListener("touchend", (e) => {
+    mouseupTouchend(e.touches[0]);
+});
+
+window.addEventListener("mousemove", (e) => {
+    mousemoveTouchmove(e);
 });
 
 window.addEventListener("touchmove", (e) => {
-    mouse.dx = e.touches[0].clientX - mouse.x;
-    mouse.dy = e.touches[0].clientY - mouse.y;
-    mouse.x = e.touches[0].clientX;
-    mouse.y = e.touches[0].clientY;
+    mousemoveTouchmove(e.touches[0]);
 });
 
-let gameInterval = setInterval(main, 10);
+// 初期化実行
+initialize();
