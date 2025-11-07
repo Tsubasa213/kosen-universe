@@ -1,22 +1,34 @@
-function init(){
-  //stars
-  var style = ["style1", "style2", "style3", "style4"];
-  var tam = ["tam1", "tam1", "tam1", "tam2", "tam3"];
-  var opacity = ["opacity1", "opacity1", "opacity1", "opacity2", "opacity2", "opacity3"];
-  function getRandomArbitrary(min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
-  }
-  var star = "";
-  var numStars = 200;
-  var starry_sky = document.querySelector(".constellation");
-  var widthWindow = window.innerWidth;
-  var heightWindow = window.innerHeight;
-  for (var i = 0; i < numStars; i++) {
-    star += "<span class='star " + style[getRandomArbitrary(0, 4)] + " " + opacity[getRandomArbitrary(0, 6)] + " "
-    + tam[getRandomArbitrary(0, 5)] + "' style='animation-delay: ." +getRandomArbitrary(0, 9)+ "s; left: "
-    + getRandomArbitrary(0, widthWindow) + "px; top: " + getRandomArbitrary(0, heightWindow) + "px;'></span>";
-  }
-  starry_sky.innerHTML = star;
-  }
-window.onload = init;
+const sky = document.querySelector('.constellation');
+const STAR_COUNT = 220;
+
+const rand = (min, max) => Math.random() * (max - min) + min;
+
+// 通常の星を生成
+for (let i = 0; i < STAR_COUNT; i++) {
+  const star = document.createElement('span');
+  star.className = 'star';
+
+  star.style.left = `${rand(0, 100)}%`;
+  star.style.top  = `${rand(0, 100)}%`;
+  star.style.width = star.style.height = `${rand(1, 3)}px`;
+
+  star.style.setProperty('--base-opacity', rand(0.35, 0.9));
+  star.style.setProperty('--twinkle', `${rand(1.6, 3.8)}s`);
+  star.style.setProperty('--delay', `${rand(0, 4)}s`);
+
+  sky.appendChild(star);
+}
+
+// 流れ星を生成
+function spawnShootingStar() {
+  const s = document.createElement('div');
+  s.className = 'shooting';
+  s.style.top = `${rand(5, 45)}%`;
+  document.querySelector('.constellation').appendChild(s);
+  setTimeout(() => s.remove(), 2000);
+}
+
+setInterval(() => {
+  if (Math.random() < 0.3) spawnShootingStar();
+}, 5000);
 

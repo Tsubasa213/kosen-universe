@@ -9,116 +9,69 @@ body {
   width: 100%;
   overflow: hidden;
   position: relative;
-
+  font-family: "DotGothic16", sans-serif;
 }
 
 .starry_sky {
+  /* 既存のグラデーション設定を維持 */
   background: -webkit-linear-gradient(top, rgb(0, 0, 0) 50%, rgb(46, 36, 71)80%, rgb(77, 54, 137));
   width: 100%;
   height: 100%;
-  position: absolute;
+  position: fixed;
+  top: 0;
+  left: 0;
   overflow: hidden;
+  z-index: 0;
 }
 
 .constellation {
-  background-attachment: scroll;
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  animation: rotate 600s infinite linear;
+  /* 新しい星空コンテナ設定 */
+  position: fixed;
+  inset: 0;
+  z-index: 1;
 }
 
 .star {
-  background-color: white;
-  border-radius: 50%;
+  /* 新しい星のスタイル */
   position: absolute;
-  animation-name: star;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.95) 0 40%, rgba(255,255,255,0) 70%);
+  opacity: var(--base-opacity, .65);
+  animation: twinkle var(--twinkle, 2.2s) ease-in-out infinite;
+  animation-delay: calc(var(--delay, 0s) * -1);
 }
 
-.star.style1 {
-  animation-duration: 0.5s;
-  animation-name: star;
+@keyframes twinkle {
+  0%, 100% { opacity: .6; transform: scale(1); }
+  40%      { opacity: .2; }
+  70%      { opacity: 1; transform: scale(1.1); }
 }
 
-.star.style2 {
-  animation-duration: 1s;
-  animation-name: star;
-}
-
-.star.style3 {
-  animation-duration: 1.5s;
-  animation-name: star;
-}
-
-.star.style4 {
-  animation-duration: 2s;
-  animation-name: starFeat;
-}
-
-.star.tam1 {
-  width: 1px;
-  height: 1px;
-}
-
-.star.tam2 {
-  width: 2px;
+/* 流れ星 */
+.shooting {
+  position: absolute;
+  width: 140px;
   height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0));
+  animation: shoot 1.8s ease-in forwards;
 }
 
-.star.tam3 {
-  width: 3px;
-  height: 3px;
-}
-
-.star.opacity1 {
-  opacity: 1;
-}
-
-.star.opacity2 {
-  opacity: .5;
-}
-
-.star.opacity3 {
-  opacity: .1;
-}
-
-@keyframes star {
-  0% {
-    box-shadow: 0 0 10px 0px rgba(255, 255, 255, 0.05);
-  }
-  50% {
-    box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.4);
-  }
-  100% {
-    box-shadow: 0 0 10px 0px rgba(255, 255, 255, 0.05);
-  }
-}
-
-@keyframes starFeat {
-  0% {
-    background-color: #FFFFFF;
-    box-shadow: 0 0 10px 0px rgba(255, 255, 255, 1);
-  }
-  20% {
-    background-color: #FFC4C4;
-    box-shadow: 0 0 10px 0px rgb(255, 196, 196, 1);
-  }
-  80% {
-    background-color: #C4CFFF;
-    box-shadow: 0 0 10px 0px rgb(196, 207, 255, 1);
-  }
-  100% {
-    background-color: #FFFFFF;
-    box-shadow: 0 0 10px 0px rgba(255, 255, 255, 0.2);
-  }
+@keyframes shoot {
+  0%   { transform: translateX(0); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateX(120vw); opacity: 0; }
 }
 
 
 /* ↓ここから編集 */
+.content {
+  position: relative;
+  z-index: 10;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .title{
   color: white;
   padding-top: 20px;
@@ -133,56 +86,105 @@ h2{
   z-index: 10;
 }
 
-h3{
+.section-title{
+  position: relative;
+  color: white;
+  padding: 0px 20px;
+  background: #2e055d;
+  border: 4px double #ffffff;
+  border-radius: 40px;
+  font-size: 120%;
+  margin: 0 10px;
   position: relative;
   z-index: 10;
+  
 }
 
-ul{
+ol{
   position: relative;
   z-index: 10;
 }
 
 .description{
-  color: white;
-  padding: 20px;
-  background: #f98289;
-  border: 4px double #ffffff;
-  border-radius: 15px;
-  font-size: 100%;
+  margin: 2em 0;
   position: relative;
+  padding: 0.5em 1.5em;
+  border-top: solid 2px white;
+  border-bottom: solid 2px white;
+  color: white;
+  font-size: 100%;
   z-index: 10;
+  text-align: justify;
+}
+
+.description:before, .description:after{
+  content: '';
+  position: absolute;
+  top: -10px;
+  width: 2px;
+  height: -webkit-calc(100% + 20px);
+  height: calc(100% + 20px);
+  background-color: white;
+}
+
+.description:before {
+  left: 10px;
+}
+
+.description:after {
+  right: 10px;
+}
+
+.description p {
+  margin: 0; 
+  padding: 0;
 }
 
 a{
   color: white;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 .subtitle {
-  color: white;
+  color: #c0ffee;
   padding: 10px 20px 0 20px;
   position: relative;
   z-index: 10;
 }
+.small {
+  line-height: 90%;
+}
+
+.footer {
+  margin-top: 3em;
+  padding: 1em 10px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9em;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 10;
+}
+
+.footer p {
+  margin: 0;
+}
+
+
+
 @media screen and (max-width: 768px) {
   .title {
-    font-size: 1.5rem;
+    font-size: 2rem;
     padding-top: 15px;
     padding: 0 10px;
+    padding-left: 16%;
+    color: #c0ffee;
+
   }
 
   .description {
-  color: white;
-  padding: 0px 20px;
-  
-  background: #940108;
-  border: 4px double #ffffff;
-  border-radius: 15px;
-  font-size: 100%;
-  margin: 0 10px;
-  position: relative;
-  z-index: 10;
+    margin: 2em 10px;
+    padding: 0.5em 1.5em;
   }
 
   .star.tam1 {
