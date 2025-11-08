@@ -3,9 +3,10 @@ html, body {
     padding: 0;
     height: 100%;
     overflow: hidden;
+    background-color : black;
 }
 canvas {
     display: block;
     width: 100vw;
-    height: 100vh;
+    height: 90vh;
 }

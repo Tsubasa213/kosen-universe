@@ -3,12 +3,12 @@ const ctx = canvas.getContext("2d");
 
 // ピクセルサイズをブラウザのサイズに合わせる
 canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.height = window.innerHeight * 0.9;
 
 // ウィンドウサイズ変更時もリサイズ
 window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = window.innerHeight * 0.9;
     if (!gameInterval) {
         initialize();
     }
@@ -80,7 +80,21 @@ const initialize = () => {
     initializeVariables();
     initializeScreen();
     drawCore(1);
-    drawText("画面をタップして開始", canvas.width / 2 - 100, canvas.height / 2, "20px Arial", "#000000");
+    drawText("核融合コンボ", canvas.width / 2 - 120, 120, "40px Arial", "#ffffff");
+    const descriptions = [
+        "核融合させて恒星の温度を上げていくゲームです。",
+        "元素をタップし、ドラッグすることで複数の元素を組み合わせられます。",
+        "指を離すと、組み合わせは解除されます。",
+        "各ステージの適切な組み合わせを作ると、核融合が発生します。",
+        "組み合わせに不純物が含まれる場合は、核融合が発生しません。",
+        "核融合が発生すると、新たな元素が生成され、温度が上昇します。",
+        "そのステージにおける最大温度まで上げると、次のステージに進めます。",
+        "ステージ6の最大温度まで上げると、ゲームクリアとなります。"
+    ];
+    descriptions.forEach((description, index) => {
+        drawText(description, canvas.width / 2 - description.length * 5, 200 + index * 30, "10px Arial", "#ffffff");
+    });
+    drawText("画面をタップして開始", canvas.width / 2 - 180, canvas.height - 100, "36px Arial", "#ffffff");
 }
 
 // メインループ
@@ -102,7 +116,7 @@ const main = () => {
             let dy = mouse.y - element.y;
             let dist = Math.hypot(dx, dy);
 
-            if (dist < element.size && element.invincibleTime <= 0) {
+            if (dist < element.size + 10 && element.invincibleTime <= 0) {
                 element.isDragging = true;
             }
         });
@@ -340,26 +354,35 @@ const main = () => {
     }
 
     // 温度描写
-    if (stage < maxTemps.length) {
-        temperature -= risingWidths[stage] / 2000; // 徐々に冷却
-    } else {
-        temperature = maxTemps[maxTemps.length - 1];
-    }
-    if (temperature < maxTemps[stage - 1]) {
-        temperature = maxTemps[stage - 1];
-    }
-    drawText("温度: " + Math.floor(temperature) + " K", 20, canvas.height - 50, "20px Arial", "#ffffff");
+    if (bombingCount < 100) {
+        if (stage < maxTemps.length) {
+            temperature -= risingWidths[stage] / 2000; // 徐々に冷却
+        } else {
+            temperature = maxTemps[maxTemps.length - 1];
+        }
+        if (temperature < maxTemps[stage - 1]) {
+            temperature = maxTemps[stage - 1];
+        }
+        drawText("温度: " + Math.floor(temperature) + " K", 20, canvas.height - 50, "20px Arial", "#ffffff");
 
-    // 温度バー描写
-    let maxTemp, tempBarWidth;
-    if (stage < maxTemps.length) {
-        maxTemp = maxTemps[stage] - maxTemps[stage - 1];
-        tempBarWidth = (canvas.width - 40) * (temperature - maxTemps[stage - 1]) / maxTemp;
-    } else {
-        tempBarWidth = (canvas.width - 40);
+        // 時間描写
+        if (stage <= 6) {
+            drawText("タイム: " + Math.floor(count / 100) + "." + (count % 100).toString().padStart(2, '0') + " 秒", canvas.width - 200, canvas.height - 50, "20px Arial", "#ffffff");
+        } else {
+            drawText("タイム: " + Math.floor(clearCount / 100) + "." + (clearCount % 100).toString().padStart(2, '0') + " 秒", canvas.width - 200, 40, "20px Arial", "#ffffff");
+        }
+
+        // 温度バー描写
+        let maxTemp, tempBarWidth;
+        if (stage < maxTemps.length) {
+            maxTemp = maxTemps[stage] - maxTemps[stage - 1];
+            tempBarWidth = (canvas.width - 40) * (temperature - maxTemps[stage - 1]) / maxTemp;
+        } else {
+            tempBarWidth = (canvas.width - 40);
+        }
+        drawLine(20, canvas.height - 40, 20 + tempBarWidth, canvas.height - 40, "#ff0000", 2);
+        drawLine(20 + tempBarWidth, canvas.height - 40, canvas.width - 20, canvas.height - 40, "#ffffff", 1);
     }
-    drawLine(20, canvas.height - 40, 20 + tempBarWidth, canvas.height - 40, "#ff0000", 2);
-    drawLine(20 + tempBarWidth, canvas.height - 40, canvas.width - 20, canvas.height - 40, "#ffffff", 1);
 
     // カウントを進める
     count++;
